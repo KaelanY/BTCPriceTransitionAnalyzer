@@ -1,15 +1,16 @@
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time  # Import the time module
 
 def load_data(filename, columns):
     data = np.genfromtxt(filename, delimiter=',', skip_header=1, usecols=columns)
-    # Ensure that the data is at least 2D
     return data.reshape(-1, 1)
 
-
 price = load_data('BTC.csv', [4])
+
+# Start timing the calculation
+start_time = time.time()  # Record the start time
 
 # Calculate returns using NumPy for faster performance
 returns = np.diff(price[:, 0]) / price[:-1, 0]
@@ -19,11 +20,10 @@ threshold = float(input("Enter threshold in decimals: "))
 # Create threshold movement array
 threshold_movement = np.where(returns > threshold, 1, np.where(returns < -threshold, -1, 0))
 
-
 def transition_probabilities(movement):
     rise = movement > 0
     fall = movement <= 0
-
+    
     total_rise = np.sum(rise[:-1])
     total_fall = np.sum(fall[:-1])
 
@@ -38,7 +38,6 @@ def transition_probabilities(movement):
     prob_fall_given_fall = total_fall_to_fall / total_fall if total_fall else 0
 
     return np.array([prob_rise_given_rise, prob_fall_given_rise, prob_rise_given_fall, prob_fall_given_fall])
-
 
 initial_transition_probs = transition_probabilities(threshold_movement)
 
@@ -66,7 +65,12 @@ for sim in range(num_simulations):
 final_prices = all_simulated_prices[:, -1]
 average_final_price = np.mean(final_prices)
 
+# End timing the calculation
+end_time = time.time()  # Record the end time
+elapsed_time = end_time - start_time  # Calculate elapsed time
+
 print(f"\nAverage final price after {num_simulations} simulations: {average_final_price:.4f}")
+print(f"Elapsed time: {elapsed_time:.4f} seconds")  # Print elapsed time
 
 plt.figure(figsize=(12, 6))
 plt.plot(all_simulated_prices.T, label='Simulation')
